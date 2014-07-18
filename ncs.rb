@@ -20,16 +20,17 @@ class NationalCrimeSearch
     @token = token
     @test_environment = test_env
     @root_uri = get_root_uri(test_env)
-    @endpoints = [:valid_token, :generate_token, :valid_user, :searches,
-                  :show_search]
+    @endpoints = [:valid_token, :generate_token, :valid_user,
+                  :new_search, :search_status, :search_result,
+                  :packages, :search_inputs]
   end
 
-  # The target is a symbol or string for the path action. 
+  # The target is a symbol or string for the path action.
   # Examples:
   #    :valid_token, :generate_token, :searches, :show_search
-  def send_request(target, payload = {})
+  def send_request(target, payload = {}, id = '')
     if valid_endpoint?(target)
-      send_post(get_path_for_endpoint(target), payload)
+      send_post(get_path_for_endpoint(target, id), payload)
     else
       { 'error' => "#{target} is not a valid endpoint" }
     end
@@ -51,15 +52,28 @@ class NationalCrimeSearch
   end
 
   # Returns the path for the endpoint so the user doesn't have to provide it
-  # themselves
-  def get_path_for_endpoint(target, args = {})
+  # themselves.
+  # target: the symbol for where the request is being sent
+  # id: optional parameter. Only one endpoint requires a url to be built with
+  #     an id - /searches/show/:id. This id is used to build that endpoint path.
+  def get_path_for_endpoint(target, id = '')
     case target
     when :valid_token, :generate_token then
       "/users/#{target}.json"
     when :valid_user then
       '/users/valid.json'
+    when :search_status then
+      "/searches/show/#{id}.json"
+    when :new_search then
+      '/searches.json'
+    when :search_result then
+      '/searches/get_search_result.json'
+    when :packages then
+      '/searches/get_packages.json'
+    when :search_inputs then
+      '/searches/get_package_search_inputs.json'
     else
-      "/searches/#{target}.json"
+      { 'error' => "#{target} is not a valid endpoint" }
     end
   end
 
